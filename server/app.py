@@ -42,7 +42,20 @@ def signup():
         db.session.rollback()
         return {'errors': ['Username already taken']}, 422
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
 
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter(User.username == username).first()
+
+    if user and user.authenticate(password):
+        session['user_id'] = user.id
+        return {'id': user.id, 'username': user.username}, 200
+
+    return {'errors': ['Invalid username or password']}, 401
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
