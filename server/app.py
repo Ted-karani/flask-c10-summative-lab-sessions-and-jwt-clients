@@ -57,5 +57,16 @@ def login():
 
     return {'errors': ['Invalid username or password']}, 401
 
+@app.route('/check_session')
+def check_session():
+    user_id = session.get('user_id')
+
+    if user_id:
+        user = User.query.filter(User.id == user_id).first()
+        if user:
+            return {'id': user.id, 'username': user.username}, 200
+
+    return {}, 401
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
