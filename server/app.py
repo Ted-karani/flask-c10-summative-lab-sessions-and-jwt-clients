@@ -73,5 +73,91 @@ def logout():
     session['user_id'] = None
     return {}, 204
 
+
+@app.route('/notes', methods=['GET'])
+def get_notes():
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return {'errors': ['Unauthorized']}, 401
+
+    notes = Note.query.filter(Note.user_id == user_id).all()
+
+    notes_list = [
+        {
+            'id': note.id,
+            'title': note.title,
+            'content': note.content,
+            'category': note.category,
+            'created_at': note.created_at.isoformat()
+        }
+        for note in notes
+    ]
+
+    return notes_list, 200
+
+@app.route('/notes', methods=['POST'])
+def create_note():
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return {'errors': ['Unauthorized']}, 401
+
+    data = request.get_json()
+
+    note = Note(
+        title=data.get('title'),
+        content=data.get('content'),
+        category=data.get('category'),
+        user_id=user_id
+    )
+
+    db.session.add(note)
+    db.session.commit()
+
+    return {
+        'id': note.id,
+        'title': note.title,
+        'content': note.content,
+        'category': note.category,
+        'created_at': note.created_at.isoformat()
+    }, 201
+
+@app.route('/notes/<int:id>', methods=['PATCH'])
+def update_note(id):
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return {'errors': ['Unauthorized']}, 401
+
+    note = Note.query.filter(Note.id == id).first()
+
+    if not note:
+        return {'errors': ['Note not found']}, 404
+
+    
+    if note.user_id != user_id:
+        return {'errors': ['Unauthorized']}, 401
+
+    data = request.get_json()
+
+    if 'title' in data:
+        note.title = data['title']
+    if 'content' in data:
+        note.content = data['content']
+    if 'category' in data:
+        note.category = data['category']
+
+    db.session.commit()
+
+    return {
+        'id': note.id,
+        'title': note.title,
+        'content': note.content,
+        'category': note.category,
+        'created_at': note.created_at.isoformat()
+    }, 200
+
+
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
