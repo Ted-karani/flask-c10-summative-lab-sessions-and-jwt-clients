@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from flask import Flask, request, session
 from flask_migrate import Migrate
 from sqlalchemy.exc import IntegrityError
