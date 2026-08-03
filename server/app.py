@@ -158,6 +158,26 @@ def update_note(id):
         'created_at': note.created_at.isoformat()
     }, 200
 
+@app.route('/notes/<int:id>', methods=['DELETE'])
+def delete_note(id):
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return {'errors': ['Unauthorized']}, 401
+
+    note = Note.query.filter(Note.id == id).first()
+
+    if not note:
+        return {'errors': ['Note not found']}, 404
+
+    if note.user_id != user_id:
+        return {'errors': ['Unauthorized']}, 401
+
+    db.session.delete(note)
+    db.session.commit()
+
+    return {}, 204
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
